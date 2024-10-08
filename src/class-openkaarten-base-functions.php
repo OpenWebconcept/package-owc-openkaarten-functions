@@ -43,6 +43,11 @@ class Openkaarten_Base_Functions {
 		self::init_hooks();
 	}
 
+	/**
+	 * Register the hooks for the admin area.
+	 *
+	 * @return void
+	 */
 	public static function init_hooks() {
 		add_action( 'admin_enqueue_scripts', array( 'Openkaarten_Base_Functions\Openkaarten_Base_Functions', 'admin_enqueue_scripts' ) );
 	}
@@ -130,7 +135,7 @@ class Openkaarten_Base_Functions {
 	/**
 	 * Save the location geometry object.
 	 *
-	 * @param int $post_id The post ID.
+	 * @param int   $post_id The post ID.
 	 * @param array $properties The properties of the location.
 	 *
 	 * @return void
@@ -150,10 +155,10 @@ class Openkaarten_Base_Functions {
 
 			switch ( sanitize_text_field( wp_unslash( $_POST['location_geometry_geodata_type'] ) ) ) {
 				case 'address':
-					$address = sanitize_text_field( wp_unslash( $_POST['field_geo_address'] ) );
-					$zipcode = sanitize_text_field( wp_unslash( $_POST['field_geo_zipcode'] ) );
-					$city    = sanitize_text_field( wp_unslash( $_POST['field_geo_city'] ) );
-					$country = sanitize_text_field( wp_unslash( $_POST['field_geo_country'] ) );
+					$address = isset( $_POST['field_geo_address'] ) ? sanitize_text_field( wp_unslash( $_POST['field_geo_address'] ) ) : '';
+					$zipcode = isset( $_POST['field_geo_zipcode'] ) ? sanitize_text_field( wp_unslash( $_POST['field_geo_zipcode'] ) ) : '';
+					$city    = isset( $_POST['field_geo_city'] ) ? sanitize_text_field( wp_unslash( $_POST['field_geo_city'] ) ) : '';
+					$country = isset( $_POST['field_geo_country'] ) ? sanitize_text_field( wp_unslash( $_POST['field_geo_country'] ) ) : '';
 
 					// Update post meta data.
 					update_post_meta( $post_id, 'field_geo_address', wp_slash( $address ) );
@@ -171,7 +176,7 @@ class Openkaarten_Base_Functions {
 
 					$geometry_coordinates = [ (float) $longitude, (float) $latitude ];
 
-					$geometry  = [
+					$geometry = [
 						'type'        => 'Point',
 						'coordinates' => $geometry_coordinates,
 					];
@@ -183,7 +188,7 @@ class Openkaarten_Base_Functions {
 					}
 
 					// Check if the input has one or multiple markers in it.
-					$marker_data = json_decode( stripslashes( $_POST['location_geometry_coordinates'] ), true );
+					$marker_data = json_decode( stripslashes( sanitize_text_field( wp_unslash( $_POST['location_geometry_coordinates'] ) ) ), true );
 
 					if ( ! $marker_data ) {
 						return;
@@ -195,7 +200,7 @@ class Openkaarten_Base_Functions {
 					// Make the geometry object based on the amount of markers.
 					if ( 1 === count( $marker_data ) ) {
 						$marker_data = $marker_data[0];
-						$geometry  = [
+						$geometry    = [
 							'type'        => 'Point',
 							'coordinates' => [ (float) $marker_data['lng'], (float) $marker_data['lat'] ],
 						];
@@ -205,7 +210,7 @@ class Openkaarten_Base_Functions {
 							$geometry_coordinates[] = [ (float) $marker['lng'], (float) $marker['lat'] ];
 						}
 
-						$geometry  = [
+						$geometry = [
 							'type'        => 'MultiPoint',
 							'coordinates' => $geometry_coordinates,
 						];
@@ -275,6 +280,9 @@ class Openkaarten_Base_Functions {
 	/**
 	 * Register the CMB2 metaboxes for the geometry fields for the Location post type.
 	 *
+	 * @param int   $post_id The post ID.
+	 * @param array $post_types The post types to add the metabox to.
+	 *
 	 * @return void
 	 */
 	public static function cmb2_location_geometry_fields( $post_id, $post_types ) {
@@ -283,7 +291,7 @@ class Openkaarten_Base_Functions {
 		$cmb = new_cmb2_box(
 			array(
 				'id'           => $prefix . 'metabox',
-				'title'        => __( 'Geodata', 'openkaarten-geodata' ),
+				'title'        => __( 'Geodata', 'openkaarten-functions' ),
 				'object_types' => $post_types,
 				'context'      => 'normal',
 				'priority'     => 'low',
@@ -297,11 +305,11 @@ class Openkaarten_Base_Functions {
 		$cmb->add_field(
 			array(
 				'id'           => $prefix . 'geodata_type',
-				'name'         => __( 'Geodata type', 'openkaarten-geodata' ),
+				'name'         => __( 'Geodata type', 'openkaarten-functions' ),
 				'type'         => 'radio',
 				'options'      => array(
-					'marker'  => __( 'Marker(s)', 'openkaarten-geodata' ),
-					'address' => __( 'Address', 'openkaarten-geodata' ),
+					'marker'  => __( 'Marker(s)', 'openkaarten-functions' ),
+					'address' => __( 'Address', 'openkaarten-functions' ),
 				),
 				'default'      => 'marker',
 				'show_in_rest' => true,
@@ -311,8 +319,8 @@ class Openkaarten_Base_Functions {
 		$cmb->add_field(
 			array(
 				'id'           => $prefix . 'coordinates',
-				'name'         => __( 'Coordinates', 'openkaarten-geodata' ),
-				'desc'         => __( 'Click on the map to add a new marker. Drag the marker after adding to change the location of the marker. Right click on a marker to remove the marker from the map.', 'openkaarten-geodata' ),
+				'name'         => __( 'Coordinates', 'openkaarten-functions' ),
+				'desc'         => __( 'Click on the map to add a new marker. Drag the marker after adding to change the location of the marker. Right click on a marker to remove the marker from the map.', 'openkaarten-functions' ),
 				'type'         => 'geomap',
 				'show_in_rest' => true,
 				'save_field'   => false,
@@ -325,12 +333,12 @@ class Openkaarten_Base_Functions {
 
 		// Add address and latitude and longitude fields.
 		$address_fields = array(
-			'address'   => __( 'Address + number', 'openkaarten-geodata' ),
-			'zipcode'   => __( 'Zipcode', 'openkaarten-geodata' ),
-			'city'      => __( 'City', 'openkaarten-geodata' ),
-			'country'   => __( 'Country', 'openkaarten-geodata' ),
-			'latitude'  => __( 'Latitude', 'openkaarten-geodata' ),
-			'longitude' => __( 'Longitude', 'openkaarten-geodata' ),
+			'address'   => __( 'Address + number', 'openkaarten-functions' ),
+			'zipcode'   => __( 'Zipcode', 'openkaarten-functions' ),
+			'city'      => __( 'City', 'openkaarten-functions' ),
+			'country'   => __( 'Country', 'openkaarten-functions' ),
+			'latitude'  => __( 'Latitude', 'openkaarten-functions' ),
+			'longitude' => __( 'Longitude', 'openkaarten-functions' ),
 		);
 
 		foreach ( $address_fields as $field_key => $field ) {
@@ -356,7 +364,7 @@ class Openkaarten_Base_Functions {
 					'id'           => 'field_geo_' . $field_key,
 					'type'         => 'text',
 					/* translators: %s: The field name. */
-					'description'  => sprintf( __( 'The %s of the location.', 'openkaarten-geodata' ), strtolower( $field ) ),
+					'description'  => sprintf( __( 'The %s of the location.', 'openkaarten-functions' ), strtolower( $field ) ),
 					'show_in_rest' => true,
 					'attributes'   => $attributes,
 					'save_field'   => false,

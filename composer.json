@@ -15,6 +15,26 @@
             "Openkaarten_Base_Functions\\": "src/"
         }
     },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "git@bitbucket.org:acato/wp-pre-commit-hook.git"
+        }
+    ],
+    "require" : {
+        "composer/installers" : "~1.0"
+    },
+    "require-dev" : {
+        "acato/wp-pre-commit-hook": "*",
+        "phpcompatibility/phpcompatibility-wp": "*"
+    },
+    "config" : {
+        "allow-plugins" : {
+            "composer/installers" : true,
+            "dealerdirect/phpcodesniffer-composer-installer" : true,
+            "acato/wp-pre-commit-hook": true
+        }
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }
