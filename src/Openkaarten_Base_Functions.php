@@ -131,10 +131,11 @@ class Openkaarten_Base_Functions {
 	 * Save the location geometry object.
 	 *
 	 * @param int $post_id The post ID.
+	 * @param array $properties The properties of the location.
 	 *
 	 * @return void
 	 */
-	public static function save_geometry_object( $post_id ) {
+	public static function save_geometry_object( $post_id, $properties = [] ) {
 		if ( wp_is_post_autosave( $post_id ) ) {
 			return;
 		}
@@ -222,7 +223,7 @@ class Openkaarten_Base_Functions {
 
 		$component = [
 			'type'       => 'Feature',
-			'properties' => [],
+			'properties' => $properties,
 			'geometry'   => $geometry,
 		];
 		$component = wp_json_encode( $component );
