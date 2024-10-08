@@ -173,16 +173,14 @@ class Openkaarten_Base_Functions {
 	 *
 	 * @return void
 	 */
-	public static function cmb2_location_geometry_fields( $post_id ) {
+	public static function cmb2_location_geometry_fields( $post_id, $post_types ) {
 		$prefix = 'location_geometry_';
-
-		$openkaarten_geodata_post_types = get_option( 'openkaarten_geodata_post_types' );
 
 		$cmb = new_cmb2_box(
 			array(
 				'id'           => $prefix . 'metabox',
 				'title'        => __( 'Geodata', 'openkaarten-geodata' ),
-				'object_types' => $openkaarten_geodata_post_types,
+				'object_types' => $post_types,
 				'context'      => 'normal',
 				'priority'     => 'low',
 				'show_names'   => true,
