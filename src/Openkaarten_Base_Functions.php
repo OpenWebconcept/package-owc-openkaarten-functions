@@ -24,12 +24,47 @@ use CMB2_Field;
  */
 class Openkaarten_Base_Functions {
 
+	/**
+	 * Initialize the class and set its properties.
+	 *
+	 * @return void
+	 */
 	public static function init() {
-		self::initHooks();
+		self::init_hooks();
 	}
 
-	public static function initHooks() {
-		var_dump('test'); die;
+	public static function init_hooks() {
+		add_action( 'admin_enqueue_scripts', array( 'Openkaarten_Base_Functions\Openkaarten_Base_Functions', 'admin_enqueue_scripts' ) );
+	}
+
+	/**
+	 * Enqueue scripts and styles
+	 *
+	 * @return void
+	 */
+	public static function admin_enqueue_scripts() {
+		wp_enqueue_script(
+			'cmb2-conditional-logic',
+			plugin_dir_url( __FILE__ ) . 'js/cmb2-conditional-logic.js',
+			array( 'jquery', 'cmb2-scripts' ),
+			filemtime( plugin_dir_path( __FILE__ ) . 'js/cmb2-conditional-logic.js' ),
+			true
+		);
+
+		wp_enqueue_style(
+			'owc_ok_geodata-openstreetmap',
+			self::mix( '/styles/openstreetmap.css' ),
+			array(),
+			OWC_OPENKAARTEN_BASE_VERSION
+		);
+
+		wp_enqueue_script(
+			'owc_ok_geodata-openstreetmap',
+			self::mix( '/scripts/openstreetmap.js' ),
+			array(),
+			OWC_OPENKAARTEN_BASE_VERSION,
+			true
+		);
 	}
 
 	/**
