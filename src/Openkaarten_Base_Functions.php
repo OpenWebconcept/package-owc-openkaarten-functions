@@ -30,16 +30,18 @@ class Openkaarten_Base_Functions {
 	 * @return void
 	 */
 	public static function save_geometry_object( $post_id ) {
-		error_log(print_r($_POST, true));
-
 		if ( wp_is_post_autosave( $post_id ) ) {
 			return;
 		}
+
+		error_log(print_r($_POST['nonce_CMB2phplocation_geometry_metabox'], true));
 
 		// Check nonce.
 		if ( ! isset( $_POST['nonce_CMB2phplocation_geometry_metabox'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce_CMB2phplocation_geometry_metabox'] ) ), 'nonce_CMB2phplocation_geometry_metabox' ) ) {
 			return;
 		}
+
+		error_log(print_r($_POST['nonce_CMB2phplocation_geometry_metabox'], true));
 
 		// Retrieve the latitude and longitude by address.
 		if ( isset( $_POST['location_geometry_geodata_type'] ) ) {
