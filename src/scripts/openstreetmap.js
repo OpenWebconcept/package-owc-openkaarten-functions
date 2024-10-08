@@ -32,7 +32,6 @@ window.onload = function() {
   }).addTo(map);
 
   // Add a marker to the map if the location is set.
-  console.log(markersArray);
   if (setMarker) {
     // Add a marker for every location in the markers array.
     markersArray.forEach( function( location ) {

@@ -17,11 +17,11 @@ use CMB2_Field;
 define( 'OWC_OPENKAARTEN_FUNCTIONS_VERSION', '0.0.1' );
 
 if ( ! defined( 'OWC_OPENKAARTEN_FUNCTIONS_ABSPATH' ) ) {
-	define( 'OWC_OPENKAARTEN_FUNCTIONS_ABSPATH', plugin_dir_path( __FILE__ ) );
+	define( 'OWC_OPENKAARTEN_FUNCTIONS_ABSPATH', plugin_dir_path( __FILE__ ) . '../' );
 }
 
 if ( ! defined( 'OWC_OPENKAARTEN_FUNCTIONS_ASSETS_URL' ) ) {
-	define( 'OWC_OPENKAARTEN_FUNCTIONS_ASSETS_URL', esc_url( trailingslashit( plugins_url( '', __FILE__ ) ) . 'build' ) );
+	define( 'OWC_OPENKAARTEN_FUNCTIONS_ASSETS_URL', esc_url( trailingslashit( plugins_url( '', __FILE__ ) ) . '../build' ) );
 }
 
 /**
