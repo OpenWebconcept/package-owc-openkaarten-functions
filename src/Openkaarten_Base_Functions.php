@@ -24,6 +24,10 @@ use CMB2_Field;
  */
 class Openkaarten_Base_Functions {
 
+	public function __construct() {
+		var_dump('test'); die;
+	}
+
 	/**
 	 * Save the location geometry object.
 	 *
