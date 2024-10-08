@@ -24,7 +24,11 @@ use CMB2_Field;
  */
 class Openkaarten_Base_Functions {
 
-	public function __construct() {
+	public static function init() {
+		self::initHooks();
+	}
+
+	public static function initHooks() {
 		var_dump('test'); die;
 	}
 
