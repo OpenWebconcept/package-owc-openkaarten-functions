@@ -84,7 +84,7 @@ class Openkaarten_Base_Functions {
 	 *
 	 * @return string|null
 	 */
-	private static function mix( string $path ): ?string {
+	public static function mix( string $path ): ?string {
 		static $manifest;
 		if ( empty( $manifest ) ) {
 			$manifest = OWC_OPENKAARTEN_FUNCTIONS_ABSPATH . '/build/mix-manifest.json';
@@ -112,7 +112,7 @@ class Openkaarten_Base_Functions {
 	 *
 	 * @return bool|mixed
 	 */
-	private static function has_resource( $path ) {
+	public static function has_resource( $path ) {
 
 		static $resources = null;
 
