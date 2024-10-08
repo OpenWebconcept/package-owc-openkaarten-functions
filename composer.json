@@ -1,6 +1,6 @@
 {
     "name": "acato/openkaarten-base-functions",
-    "type": "package",
+    "type": "library",
     "description": "Adds global functions for OpenKaarten Base and OpenKaarten add-on plugins.",
     "homepage": "https://www.acato.nl",
     "license": "MIT",
@@ -11,9 +11,9 @@
         }
     ],
     "autoload": {
-        "files": [
-            "openkaarten-base-functions.php"
-        ]
+        "psr-4": {
+            "Openkaarten_Base_Functions\\": "src/"
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true
