@@ -1,0 +1,20 @@
+{
+    "name": "acato/openkaarten-base-functions",
+    "type": "package",
+    "description": "Adds global functions for OpenKaarten Base and OpenKaarten add-on plugins.",
+    "homepage": "https://www.acato.nl",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Eyal Beker",
+            "email": "eyal@acato.nl"
+        }
+    ],
+    "autoload": {
+        "files": [
+            "openkaarten-base-functions.php"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
