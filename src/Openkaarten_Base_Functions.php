@@ -1,4 +1,5 @@
-<?php
+<?php //phpcs:ignore WordPress.Files.FileName -- This class name is necessary for the autoloader.
+
 /**
  * The file that defines the core plugin class
  *
