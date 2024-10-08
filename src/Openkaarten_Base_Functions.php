@@ -424,7 +424,7 @@ class Openkaarten_Base_Functions {
 		);
 
 		// Add the map and the hidden input field. This hidden input field is needed for the CMB2 Conditional Logic to work, but doesn't store any data itself.
-		echo '<div id="map" class="map"></div>
+		echo '<div id="map-geodata" class="map-geodata"></div>
 		<p class="cmb2-metabox-description">' . esc_attr( $field->args['desc'] ) . '</p>
 		<input type="hidden" id="' . esc_attr( $field->args['id'] ) . '" name="' . esc_attr( $field->args['_name'] ) . '" data-conditional-id="location_geometry_geodata_type" data-conditional-value="marker">';
 	}
