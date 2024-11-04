@@ -119,8 +119,6 @@ function updateMarkers( map ) {
 }
 
 function updateGeoFields( markerData ) {
-  console.log(markerData);
-
   // Update hidden CMB2 fields with the marker data.
   jQuery( '#location_geometry_coordinates' ).val( JSON.stringify( markerData ) );
 }
