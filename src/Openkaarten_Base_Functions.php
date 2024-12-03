@@ -14,6 +14,8 @@
 namespace Openkaarten_Base_Functions;
 
 use CMB2_Field;
+use geoPHP\Exception\IOException;
+use geoPHP\geoPHP;
 
 define( 'OWC_OPENKAARTEN_FUNCTIONS_VERSION', '0.0.1' );
 
@@ -394,28 +396,43 @@ class Openkaarten_Base_Functions {
 
 		$markers  = array();
 		$geometry = get_post_meta( $object_id, 'geometry', true );
+
 		if ( ! empty( $geometry ) ) {
-			$geometry = json_decode( $geometry, true );
-			if ( ! empty( $geometry['geometry']['coordinates'] ) ) {
-				if ( ! is_array( $geometry['geometry']['coordinates'][0] ) ) {
-					$geometry['geometry']['coordinates'] = array( $geometry['geometry']['coordinates'] );
+			// Parse the geometry object.
+			try {
+				$geometry_data = geoPHP::load( $geometry );
+
+				// Check if geometry type is Point or MultiPoint.
+				if ( 'Point' !== $geometry_data->geometryType() && 'MultiPoint' !== $geometry_data->geometryType() ) {
+					echo esc_html__( 'This geometry type can\'t be viewed on this map for the location post type. It can be plotted on the map via the Datalayer.', 'openkaarten-functions' );
+					return;
 				}
 
-				// Calculate center lat/long and bounds.
-				$center_lat  = 0;
-				$center_long = 0;
-				foreach ( $geometry['geometry']['coordinates'] as $marker ) {
-					$center_lat  += $marker[1];
-					$center_long += $marker[0];
+				if ( ! $geometry_data->getBBox() ) {
+					return;
 				}
-				$center_lat  = $center_lat / count( $geometry['geometry']['coordinates'] );
-				$center_long = $center_long / count( $geometry['geometry']['coordinates'] );
+
+				$bbox = $geometry_data->getBBox();
+
+				$center_lat  = $bbox['miny'] + ( ( $bbox['maxy'] - $bbox['miny'] ) / 2 );
+				$center_long = $bbox['minx'] + ( ( $bbox['maxx'] - $bbox['minx'] ) / 2 );
 
 				// Set the marker to true.
 				$set_marker = true;
 
 				// Add the marker to the markers array.
-				$markers = $geometry['geometry']['coordinates'];
+				$markers = $geometry_data->getComponents();
+
+				// Create array of markers.
+				$markers = array_map(
+					function ( $marker ) {
+						return [ $marker->x(), $marker->y() ];
+					},
+					$markers
+				);
+
+			} catch ( IOException $e ) {
+				return;
 			}
 		}
 
