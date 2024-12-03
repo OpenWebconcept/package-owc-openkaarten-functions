@@ -51,6 +51,7 @@ class Openkaarten_Base_Functions {
 	 */
 	public static function init_hooks() {
 		add_action( 'admin_enqueue_scripts', array( 'Openkaarten_Base_Functions\Openkaarten_Base_Functions', 'admin_enqueue_scripts' ) );
+		add_action( 'cmb2_render_geomap', array( 'Openkaarten_Base_Functions\Openkaarten_Base_Functions', 'cmb2_render_geomap_field_type' ), 10, 5 );
 	}
 
 	/**
