@@ -17,7 +17,7 @@ use CMB2_Field;
 use geoPHP\Exception\IOException;
 use geoPHP\geoPHP;
 
-define( 'OWC_OPENKAARTEN_FUNCTIONS_VERSION', '0.0.1' );
+define( 'OWC_OPENKAARTEN_FUNCTIONS_VERSION', '0.0.2' );
 
 if ( ! defined( 'OWC_OPENKAARTEN_FUNCTIONS_ABSPATH' ) ) {
 	define( 'OWC_OPENKAARTEN_FUNCTIONS_ABSPATH', plugin_dir_path( __FILE__ ) . '../' );
@@ -64,9 +64,9 @@ class Openkaarten_Base_Functions {
 	public static function admin_enqueue_scripts() {
 		wp_enqueue_script(
 			'cmb2-conditional-logic',
-			plugin_dir_url( __FILE__ ) . 'js/cmb2-conditional-logic.js',
+			self::mix( '/scripts/cmb2-conditional-logic.js' ),
 			array( 'jquery', 'cmb2-scripts' ),
-			filemtime( plugin_dir_path( __FILE__ ) . 'js/cmb2-conditional-logic.js' ),
+			OWC_OPENKAARTEN_FUNCTIONS_VERSION,
 			true
 		);
 
