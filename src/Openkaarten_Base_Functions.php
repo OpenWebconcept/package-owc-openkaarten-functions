@@ -349,7 +349,7 @@ class Openkaarten_Base_Functions {
 
 		// Enqueue the OpenStreetMap script.
 		wp_localize_script(
-			'owc_ok_geodata-openstreetmap',
+			'owc_ok-openstreetmap-geodata',
 			'leaflet_vars',
 			array(
 				'centerLat'   => esc_attr( $center_lat ),
