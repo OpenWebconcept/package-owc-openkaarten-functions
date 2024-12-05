@@ -19,14 +19,6 @@ use geoPHP\geoPHP;
 
 define( 'OWC_OPENKAARTEN_FUNCTIONS_VERSION', '0.0.2' );
 
-if ( ! defined( 'OWC_OPENKAARTEN_FUNCTIONS_ABSPATH' ) ) {
-	define( 'OWC_OPENKAARTEN_FUNCTIONS_ABSPATH', plugin_dir_path( __FILE__ ) . '../' );
-}
-
-if ( ! defined( 'OWC_OPENKAARTEN_FUNCTIONS_ASSETS_URL' ) ) {
-	define( 'OWC_OPENKAARTEN_FUNCTIONS_ASSETS_URL', esc_url( trailingslashit( plugins_url( '', __FILE__ ) ) . '../build' ) );
-}
-
 /**
  * The core plugin class.
  *
@@ -52,88 +44,7 @@ class Openkaarten_Base_Functions {
 	 * @return void
 	 */
 	public static function init_hooks() {
-		add_action( 'admin_enqueue_scripts', array( 'Openkaarten_Base_Functions\Openkaarten_Base_Functions', 'admin_enqueue_scripts' ) );
 		add_action( 'cmb2_render_geomap', array( 'Openkaarten_Base_Functions\Openkaarten_Base_Functions', 'cmb2_render_geomap_field_type' ), 10, 5 );
-	}
-
-	/**
-	 * Enqueue scripts and styles
-	 *
-	 * @return void
-	 */
-	public static function admin_enqueue_scripts() {
-		wp_enqueue_script(
-			'cmb2-conditional-logic',
-			self::mix( '/scripts/cmb2-conditional-logic.js' ),
-			array( 'jquery', 'cmb2-scripts' ),
-			OWC_OPENKAARTEN_FUNCTIONS_VERSION,
-			true
-		);
-
-		wp_enqueue_style(
-			'owc_ok_geodata-openstreetmap',
-			self::mix( '/styles/openstreetmap.css' ),
-			array(),
-			OWC_OPENKAARTEN_FUNCTIONS_VERSION
-		);
-
-		wp_enqueue_script(
-			'owc_ok_geodata-openstreetmap',
-			self::mix( '/scripts/openstreetmap.js' ),
-			array(),
-			OWC_OPENKAARTEN_FUNCTIONS_VERSION,
-			true
-		);
-	}
-
-	/**
-	 * Just a little helper to get filenames from the mix-manifest file.
-	 *
-	 * @param string $path to file.
-	 *
-	 * @return string|null
-	 */
-	public static function mix( string $path ): ?string {
-		static $manifest;
-		if ( empty( $manifest ) ) {
-			$manifest = OWC_OPENKAARTEN_FUNCTIONS_ABSPATH . '/build/mix-manifest.json';
-
-			if ( ! self::has_resource( $manifest ) ) {
-				return OWC_OPENKAARTEN_FUNCTIONS_ASSETS_URL . $path;
-			}
-
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- We need to read the file.
-			$manifest = json_decode( file_get_contents( $manifest ), true );
-		}
-
-		// We need to set the `/` in front of the `$path` due to how the mix-manifest.json file is saved.
-		if ( ! str_starts_with( $path, '/' ) ) {
-			$path = '/' . $path;
-		}
-
-		return ! empty( $manifest[ $path ] ) ? untrailingslashit( OWC_OPENKAARTEN_FUNCTIONS_ASSETS_URL ) . $manifest[ $path ] : null;
-	}
-
-	/**
-	 * Checks if file exists and if the file is populated, so we don't enqueue empty files.
-	 *
-	 * @param string $path ABSPATH to file.
-	 *
-	 * @return bool|mixed
-	 */
-	public static function has_resource( $path ) {
-
-		static $resources = null;
-
-		if ( isset( $resources[ $path ] ) ) {
-			return $resources[ $path ];
-		}
-
-		// Check if resource exists and has content.
-		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-		$resources[ $path ] = @file_exists( $path ) && 0 < (int) @filesize( $path );
-
-		return $resources[ $path ];
 	}
 
 	/**
