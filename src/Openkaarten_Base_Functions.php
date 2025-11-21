@@ -87,6 +87,10 @@ class Openkaarten_Base_Functions {
 					if ( ! empty( $lat_long['latitude'] ) && ! empty( $lat_long['longitude'] ) ) {
 						$latitude  = sanitize_text_field( wp_unslash( $lat_long['latitude'] ) );
 						$longitude = sanitize_text_field( wp_unslash( $lat_long['longitude'] ) );
+					} else {
+						// If no lat and long found, remove the geometry post meta and return.
+						delete_post_meta( $post_id, 'geometry' );
+						return;
 					}
 
 					$geometry_coordinates = [ (float) $longitude, (float) $latitude ];
