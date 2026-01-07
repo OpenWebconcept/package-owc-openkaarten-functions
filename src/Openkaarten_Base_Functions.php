@@ -94,6 +94,7 @@ class Openkaarten_Base_Functions {
 					}
 
 					$geometry_coordinates = [ (float) $longitude, (float) $latitude ];
+					var_dump($geometry_coordinates); die;
 
 					$geometry = [
 						'type'        => 'Point',
@@ -181,7 +182,7 @@ class Openkaarten_Base_Functions {
 			return null;
 		}
 
-		$osm_address = json_decode( $osm_address['body'] );
+		$osm_address = json_decode( $osm_address );
 
 		if ( ! $osm_address[0]->lat || ! $osm_address[0]->lon ) {
 			return null;
@@ -257,8 +258,10 @@ class Openkaarten_Base_Functions {
 			'city'      => __( 'City', 'openkaarten-functions' ),
 			'country'   => __( 'Country', 'openkaarten-functions' ),
 			'latitude'  => __( 'Latitude', 'openkaarten-functions' ),
-			'longitude' => __( 'Longitude', 'openkaarten-functions' ),
+			'longitude' => __( 'Longitude', 'openkaarten-functions' )
 		);
+
+		$geometry_data = get_post_meta( $post_id, 'geometry', true );
 
 		foreach ( $address_fields as $field_key => $field ) {
 			// Check if this field has a value and set it as readonly and disabled if it has.
@@ -268,7 +271,8 @@ class Openkaarten_Base_Functions {
 				'data-conditional-value' => 'address',
 			);
 
-			if ( 'latitude' === $field_key || 'longitude' === $field_key ) {
+			// Check if there is a value for latitude or longitude.
+			if ( in_array( $field_key, [ 'latitude', 'longitude' ], true ) ) {
 				$attributes = array_merge(
 					$attributes,
 					array(
@@ -287,6 +291,22 @@ class Openkaarten_Base_Functions {
 					'show_in_rest' => true,
 					'attributes'   => $attributes,
 					'save_field'   => false,
+				)
+			);
+		}
+
+		// If latitude and longitude are not available, show a message.
+		if ( empty( $geometry_data ) ) {
+			$cmb->add_field(
+				array(
+					'name' => __( 'Note', 'openkaarten-functions' ),
+					'id'  => $prefix . 'address_geometry_not_available',
+					'type' => 'hidden',
+					'before_field' => '<div class="notice notice-warning inline" style="margin-top: 10px; margin-bottom: 10px;"><p>' . esc_html__( 'Latitude and Longitude could not be determined for the given address. Please check the address fields or use the marker option to add a marker for this post.', 'openkaarten-functions' ) . '</p></div>',
+					'attributes'   => array(
+						'data-conditional-id'    => $prefix . 'geodata_type',
+						'data-conditional-value' => 'address',
+					),
 				)
 			);
 		}
