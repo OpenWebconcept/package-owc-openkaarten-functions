@@ -177,8 +177,15 @@ class Openkaarten_Base_Functions {
 		$address     = str_replace( ' ', '+', $address );
 		$osm_url     = 'https://nominatim.openstreetmap.org/search?q=' . $address . '&format=json&addressdetails=1';
 		$osm_address = wp_remote_get( $osm_url );
+		$status_code = wp_remote_retrieve_response_code( $osm_address );
 
-		if ( ! $osm_address ) {
+		if ( ! $osm_address || 200 !== $status_code ) {
+			return null;
+		}
+
+		$osm_address = wp_remote_retrieve_body( $osm_address );
+
+		if ( ! $osm_address  ) {
 			return null;
 		}
 
@@ -322,9 +329,10 @@ class Openkaarten_Base_Functions {
 	 * @return void
 	 */
 	public static function cmb2_render_geomap_field_type( $field, $escaped_value, $object_id ) {
-		// Get latitude and longitude of centre of the Netherlands as starting point.
-		$center_lat  = 52.1326;
-		$center_long = 5.2913;
+		// Get latitude and longitude of centre of the Netherlands as starting point. Get this from the OpenKaarten settings.
+		$center_lat   = get_option( 'openkaarten_base_default_lat', 52.0 );
+		$center_long  = get_option( 'openkaarten_base_default_lng', 4.75 );
+		$default_zoom = get_option( 'openkaarten_base_default_zoom', 12 );
 
 		// Retrieve the current values of the latitude and longitude of the markers from the geometry object.
 		$set_marker = false;
@@ -378,7 +386,7 @@ class Openkaarten_Base_Functions {
 			array(
 				'centerLat'   => esc_attr( $center_lat ),
 				'centerLong'  => esc_attr( $center_long ),
-				'defaultZoom' => 10,
+				'defaultZoom' => $default_zoom,
 				'fitBounds'   => false,
 				'allowClick'  => true,
 				'setMarker'   => $set_marker,
