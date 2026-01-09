@@ -87,6 +87,10 @@ class Openkaarten_Base_Functions {
 					if ( ! empty( $lat_long['latitude'] ) && ! empty( $lat_long['longitude'] ) ) {
 						$latitude  = sanitize_text_field( wp_unslash( $lat_long['latitude'] ) );
 						$longitude = sanitize_text_field( wp_unslash( $lat_long['longitude'] ) );
+
+						// Update postmeta for latitude and longitude fields.
+						update_post_meta( $post_id, 'field_geo_latitude', wp_slash( $latitude ) );
+						update_post_meta( $post_id, 'field_geo_longitude', wp_slash( $longitude ) );
 					} else {
 						// If no lat and long found, remove the geometry post meta and return.
 						delete_post_meta( $post_id, 'geometry' );
@@ -94,7 +98,6 @@ class Openkaarten_Base_Functions {
 					}
 
 					$geometry_coordinates = [ (float) $longitude, (float) $latitude ];
-					var_dump($geometry_coordinates); die;
 
 					$geometry = [
 						'type'        => 'Point',
@@ -136,11 +139,13 @@ class Openkaarten_Base_Functions {
 						];
 					}
 
-					// Delete the address fields.
+					// Delete the address fields and the latitude and longitude fields.
 					delete_post_meta( $post_id, 'field_geo_address' );
 					delete_post_meta( $post_id, 'field_geo_zipcode' );
 					delete_post_meta( $post_id, 'field_geo_city' );
 					delete_post_meta( $post_id, 'field_geo_country' );
+					delete_post_meta( $post_id, 'field_geo_latitude' );
+					delete_post_meta( $post_id, 'field_geo_longitude' );
 
 					break;
 			}
@@ -175,28 +180,41 @@ class Openkaarten_Base_Functions {
 		}
 
 		$address     = str_replace( ' ', '+', $address );
-		$osm_url     = 'https://nominatim.openstreetmap.org/search?q=' . $address . '&format=json&addressdetails=1';
-		$osm_address = wp_remote_get( $osm_url );
-		$status_code = wp_remote_retrieve_response_code( $osm_address );
+		$api_url     = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=' . $address . '&rows=1&wt=json';
+		$api_request = wp_remote_get( $api_url );
 
-		if ( ! $osm_address || 200 !== $status_code ) {
+		$status_code = wp_remote_retrieve_response_code( $api_request );
+
+		if ( ! $api_request || 200 !== $status_code ) {
 			return null;
 		}
 
-		$osm_address = wp_remote_retrieve_body( $osm_address );
+		$api_address = wp_remote_retrieve_body( $api_request );
 
-		if ( ! $osm_address  ) {
+		if ( ! $api_address  ) {
 			return null;
 		}
 
-		$osm_address = json_decode( $osm_address );
+		$api_address = json_decode( $api_address, true );
 
-		if ( ! $osm_address[0]->lat || ! $osm_address[0]->lon ) {
+		if ( ! $api_address['response'] || 0 === $api_address['response']['numFound'] ) {
 			return null;
 		}
 
-		$latitude  = $osm_address[0]->lat;
-		$longitude = $osm_address[0]->lon;
+		$point = $api_address['response']['docs'][0]['centroide_ll'];
+
+		if ( ! $point ) {
+			return null;
+		}
+
+		// Convert POINT(LONG,LAT) to latitude and longitude.
+		preg_match( '/POINT\(([-+]?[0-9]*\.?[0-9]+) ([-+]?[0-9]*\.?[0-9]+)\)/', $point, $matches );
+		if ( count( $matches ) !== 3 ) {
+			return null;
+		}
+
+		$longitude = $matches[1];
+		$latitude  = $matches[2];
 
 		return [
 			'latitude'  => $latitude,
