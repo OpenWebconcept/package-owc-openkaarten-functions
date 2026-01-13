@@ -207,14 +207,10 @@ class Openkaarten_Base_Functions {
 			return null;
 		}
 
-		// Convert POINT(LONG,LAT) to latitude and longitude.
-		preg_match( '/POINT\(([-+]?[0-9]*\.?[0-9]+) ([-+]?[0-9]*\.?[0-9]+)\)/', $point, $matches );
-		if ( count( $matches ) !== 3 ) {
-			return null;
-		}
-
-		$longitude = $matches[1];
-		$latitude  = $matches[2];
+		// Convert POINT(LONG LAT) to latitude and longitude.
+		$geometry  = geoPHP::load( $point, 'wkt' );
+		$longitude = $geometry->x();
+		$latitude  = $geometry->y();
 
 		return [
 			'latitude'  => $latitude,
