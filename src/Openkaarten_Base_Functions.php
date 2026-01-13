@@ -87,6 +87,10 @@ class Openkaarten_Base_Functions {
 					if ( ! empty( $lat_long['latitude'] ) && ! empty( $lat_long['longitude'] ) ) {
 						$latitude  = sanitize_text_field( wp_unslash( $lat_long['latitude'] ) );
 						$longitude = sanitize_text_field( wp_unslash( $lat_long['longitude'] ) );
+
+						// Update postmeta for latitude and longitude fields.
+						update_post_meta( $post_id, 'field_geo_latitude', wp_slash( $latitude ) );
+						update_post_meta( $post_id, 'field_geo_longitude', wp_slash( $longitude ) );
 					} else {
 						// If no lat and long found, remove the geometry post meta and return.
 						delete_post_meta( $post_id, 'geometry' );
@@ -135,11 +139,13 @@ class Openkaarten_Base_Functions {
 						];
 					}
 
-					// Delete the address fields.
+					// Delete the address fields and the latitude and longitude fields.
 					delete_post_meta( $post_id, 'field_geo_address' );
 					delete_post_meta( $post_id, 'field_geo_zipcode' );
 					delete_post_meta( $post_id, 'field_geo_city' );
 					delete_post_meta( $post_id, 'field_geo_country' );
+					delete_post_meta( $post_id, 'field_geo_latitude' );
+					delete_post_meta( $post_id, 'field_geo_longitude' );
 
 					break;
 			}
@@ -174,21 +180,37 @@ class Openkaarten_Base_Functions {
 		}
 
 		$address     = str_replace( ' ', '+', $address );
-		$osm_url     = 'https://nominatim.openstreetmap.org/search?q=' . $address . '&format=json&addressdetails=1';
-		$osm_address = wp_remote_get( $osm_url );
+		$api_url     = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=' . $address . '&rows=1&wt=json';
+		$api_request = wp_remote_get( $api_url );
 
-		if ( ! $osm_address ) {
+		$status_code = wp_remote_retrieve_response_code( $api_request );
+
+		if ( ! $api_request || 200 !== $status_code ) {
 			return null;
 		}
 
-		$osm_address = json_decode( $osm_address['body'] );
+		$api_address = wp_remote_retrieve_body( $api_request );
 
-		if ( ! $osm_address[0]->lat || ! $osm_address[0]->lon ) {
+		if ( ! $api_address  ) {
 			return null;
 		}
 
-		$latitude  = $osm_address[0]->lat;
-		$longitude = $osm_address[0]->lon;
+		$api_address = json_decode( $api_address, true );
+
+		if ( ! $api_address['response'] || 0 === $api_address['response']['numFound'] ) {
+			return null;
+		}
+
+		$point = $api_address['response']['docs'][0]['centroide_ll'];
+
+		if ( ! $point ) {
+			return null;
+		}
+
+		// Convert POINT(LONG LAT) to latitude and longitude.
+		$geometry  = geoPHP::load( $point, 'wkt' );
+		$longitude = $geometry->x();
+		$latitude  = $geometry->y();
 
 		return [
 			'latitude'  => $latitude,
@@ -257,8 +279,10 @@ class Openkaarten_Base_Functions {
 			'city'      => __( 'City', 'openkaarten-functions' ),
 			'country'   => __( 'Country', 'openkaarten-functions' ),
 			'latitude'  => __( 'Latitude', 'openkaarten-functions' ),
-			'longitude' => __( 'Longitude', 'openkaarten-functions' ),
+			'longitude' => __( 'Longitude', 'openkaarten-functions' )
 		);
+
+		$geometry_data = get_post_meta( $post_id, 'geometry', true );
 
 		foreach ( $address_fields as $field_key => $field ) {
 			// Check if this field has a value and set it as readonly and disabled if it has.
@@ -268,7 +292,8 @@ class Openkaarten_Base_Functions {
 				'data-conditional-value' => 'address',
 			);
 
-			if ( 'latitude' === $field_key || 'longitude' === $field_key ) {
+			// Check if there is a value for latitude or longitude.
+			if ( in_array( $field_key, [ 'latitude', 'longitude' ], true ) ) {
 				$attributes = array_merge(
 					$attributes,
 					array(
@@ -290,6 +315,22 @@ class Openkaarten_Base_Functions {
 				)
 			);
 		}
+
+		// If latitude and longitude are not available, show a message.
+		if ( empty( $geometry_data ) ) {
+			$cmb->add_field(
+				array(
+					'name' => __( 'Note', 'openkaarten-functions' ),
+					'id'  => $prefix . 'address_geometry_not_available',
+					'type' => 'hidden',
+					'before_field' => '<div class="notice notice-warning inline" style="margin-top: 10px; margin-bottom: 10px;"><p>' . esc_html__( 'Latitude and Longitude could not be determined for the given address. Please check the address fields or use the marker option to add a marker for this post.', 'openkaarten-functions' ) . '</p></div>',
+					'attributes'   => array(
+						'data-conditional-id'    => $prefix . 'geodata_type',
+						'data-conditional-value' => 'address',
+					),
+				)
+			);
+		}
 	}
 
 	/**
@@ -302,9 +343,10 @@ class Openkaarten_Base_Functions {
 	 * @return void
 	 */
 	public static function cmb2_render_geomap_field_type( $field, $escaped_value, $object_id ) {
-		// Get latitude and longitude of centre of the Netherlands as starting point.
-		$center_lat  = 52.1326;
-		$center_long = 5.2913;
+		// Get latitude and longitude of centre of the Netherlands as starting point. Get this from the OpenKaarten settings.
+		$center_lat   = get_option( 'openkaarten_base_default_lat', 52.0 );
+		$center_long  = get_option( 'openkaarten_base_default_lng', 4.75 );
+		$default_zoom = get_option( 'openkaarten_base_default_zoom', 12 );
 
 		// Retrieve the current values of the latitude and longitude of the markers from the geometry object.
 		$set_marker = false;
@@ -358,7 +400,7 @@ class Openkaarten_Base_Functions {
 			array(
 				'centerLat'   => esc_attr( $center_lat ),
 				'centerLong'  => esc_attr( $center_long ),
-				'defaultZoom' => 10,
+				'defaultZoom' => $default_zoom,
 				'fitBounds'   => false,
 				'allowClick'  => true,
 				'setMarker'   => $set_marker,
