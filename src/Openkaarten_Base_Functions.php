@@ -110,6 +110,9 @@ class Openkaarten_Base_Functions {
 						return;
 					}
 
+					// Delete the geometry object.
+					self::delete_geometry_object_and_address( $post_id );
+
 					// Check if the input has one or multiple markers in it.
 					$marker_data = json_decode( stripslashes( sanitize_text_field( wp_unslash( $_POST['location_geometry_coordinates'] ) ) ), true );
 
@@ -139,14 +142,6 @@ class Openkaarten_Base_Functions {
 						];
 					}
 
-					// Delete the address fields and the latitude and longitude fields.
-					delete_post_meta( $post_id, 'field_geo_address' );
-					delete_post_meta( $post_id, 'field_geo_zipcode' );
-					delete_post_meta( $post_id, 'field_geo_city' );
-					delete_post_meta( $post_id, 'field_geo_country' );
-					delete_post_meta( $post_id, 'field_geo_latitude' );
-					delete_post_meta( $post_id, 'field_geo_longitude' );
-
 					break;
 			}
 		}
@@ -164,6 +159,23 @@ class Openkaarten_Base_Functions {
 		} else {
 			add_post_meta( $post_id, 'geometry', wp_slash( $component ), true );
 		}
+	}
+
+	/**
+	 * Delete the geometry object and all related post meta data.
+	 *
+	 * @param int $post_id The post ID.
+	 *
+	 * @return void
+	 */
+	public static function delete_geometry_object_and_address( $post_id ) {
+		delete_post_meta( $post_id, 'geometry' );
+		delete_post_meta( $post_id, 'field_geo_address' );
+		delete_post_meta( $post_id, 'field_geo_zipcode' );
+		delete_post_meta( $post_id, 'field_geo_city' );
+		delete_post_meta( $post_id, 'field_geo_country' );
+		delete_post_meta( $post_id, 'field_geo_latitude' );
+		delete_post_meta( $post_id, 'field_geo_longitude' );
 	}
 
 	/**
@@ -281,12 +293,17 @@ class Openkaarten_Base_Functions {
 			'latitude'  => __( 'Latitude', 'openkaarten-functions' ),
 			'longitude' => __( 'Longitude', 'openkaarten-functions' )
 		);
+		$address_fields_filled = false;
 
 		$geometry_data = get_post_meta( $post_id, 'geometry', true );
 
 		foreach ( $address_fields as $field_key => $field ) {
 			// Check if this field has a value and set it as readonly and disabled if it has.
 			$field_value = get_post_meta( $post_id, 'field_geo_' . $field_key, true );
+			if ( ! empty( $field_value ) ) {
+				$address_fields_filled = true;
+			}
+
 			$attributes  = array(
 				'data-conditional-id'    => $prefix . 'geodata_type',
 				'data-conditional-value' => 'address',
@@ -316,8 +333,8 @@ class Openkaarten_Base_Functions {
 			);
 		}
 
-		// If latitude and longitude are not available, show a message.
-		if ( empty( $geometry_data ) ) {
+		// If latitude and longitude are not available, show a message, but only if there is an address. If there is no address, it means the user has not filled in the address fields yet, so we don't need to show the message.
+		if ( empty( $geometry_data ) && $address_fields_filled ) {
 			$cmb->add_field(
 				array(
 					'name' => __( 'Note', 'openkaarten-functions' ),
