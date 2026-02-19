@@ -17,7 +17,7 @@ use CMB2_Field;
 use geoPHP\Exception\IOException;
 use geoPHP\geoPHP;
 
-define( 'OWC_OPENKAARTEN_FUNCTIONS_VERSION', '0.0.3' );
+define( 'OWC_OPENKAARTEN_FUNCTIONS_VERSION', '0.1.3' );
 
 /**
  * The core plugin class.
